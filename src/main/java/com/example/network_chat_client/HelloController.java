@@ -17,10 +17,6 @@ public class HelloController {
     @FXML
     private TextField toSend;
 
-    @FXML
-    void keysnd(KeyEvent event) {
-        //entersend event
-    }
 
     @FXML
     void send(ActionEvent event) {
