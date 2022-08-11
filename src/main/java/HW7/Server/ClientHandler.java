@@ -1,122 +1,119 @@
 package HW7.Server;
 
 
-import java.net.*;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 
-public class ClientHandler {
+class ClientHandler {
 
-    //Служебный класс, которому сервер передаст сокет
-    //По сокету будет происходить общение с подключившимся клиентом
-
-    private MServer server; //ссылка на сервер для клиента
     private Socket socket;
-    private DataInputStream  in; //поток ввода, используется UTF-кодировка
-    private DataOutputStream out;//поток вывода, используется UTF-кодировка
-    private String clientName;
+    private DataInputStream in;
+    private static DataOutputStream out;
+    private Main server;
+    private String nick;
 
-    private static int counter = 0;
+    String getNick() {
+        return nick;
+    }
 
-    public ClientHandler(MServer server, Socket socket)
-    {
+    boolean checkBlackList(String _blacklist_nick) {
+        int nickId = AuthService.getIdByNick(_blacklist_nick);
+        int blacklistId = AuthService.getBlackListUserById(nickId);
+        return blacklistId > 0;
+    }
 
-        try{
-            counter++;
-            this.clientName = "user" + Integer.toString(counter);
-            this.server = server;
+    ClientHandler(Socket socket, Main server) {
+        try {
             this.socket = socket;
+            this.server = server;
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
 
-            //Множество клиентов потребует множество потоков обработки
-            new Thread(()-> {
-
-                //Попробуйте сделать то же самое, но через реализацию Runnable()!
-                try
-                {
-                    while(true)
-                    {
-                        String str = in.readUTF();//блокирующая операция!!! Читаем то, что пришло от клиента
-
-                        System.out.println("A message from a client: " + str);
-
-                        if(str.equalsIgnoreCase("/end"))
-                        {
-                            break;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        while (true) {
+                            String str = in.readUTF();
+                            if (str.startsWith("/auth")) {
+                                String[] tokens = str.split(" ");
+                                String newNick = AuthService.getNickByLoginAndPass(tokens[1], tokens[2]);
+                                if (newNick != null) {
+                                    if (!server.isNickBusy(newNick)) {
+                                        sendMsg("/authok");
+                                        nick = newNick;
+                                        server.subscribe(ClientHandler.this);
+                                        break;
+                                    } else {
+                                        sendMsg("Учетная запись уже используется");
+                                    }
+                                } else {
+                                    sendMsg("Неверный логин/пароль");
+                                }
+                            }
+                            server.broadcastMsg(ClientHandler.this, str);
                         }
 
-                        if(str.startsWith("/w"))
-                        {
-                            String to = str.split(" ")[1];
-                            String msg = str.split(" ")[2];
-                            server.wisperMsg(this, to, msg); // сообщение участниками диалога
+                        while (true) {
+                            String str = in.readUTF();
+                            if (str.startsWith("/")) {
+                                if (str.equals("/end")) {
+                                    out.writeUTF("/serverclosed");
+                                    break;
+                                }
+                                if (str.startsWith("/w ")) { // /w nick3 lsdfhldf sdkfjhsdf wkerhwr
+                                    String[] tokens = str.split(" ", 3);
+                                    //if(tokens.length > 3) {
+                                    //String m = str.substring(tokens[1].length() + 4);
+                                    server.sendPersonalMsg(ClientHandler.this, tokens[1], tokens[2]);
+                                }
+                                if (str.startsWith("/blacklist ")) {
+                                    String[] tokens = str.split(" ");
 
-                        } else {
-                            server.broadcastMsg("[" + this.clientName + "] " + str);//Cервер разослал сообщение String str = in.readUTF() ВСЕМ подключенным клиентам
+                                    int nickId = AuthService.getIdByNick(nick);
+                                    int nicknameId = AuthService.getIdByNick(tokens[1]);
+                                    AuthService.addBlackListByNickAndNickName(nickId, nicknameId);
+                                    sendMsg("Вы добавили пользователя " + tokens[1] + " в черный список");
+                                }
+                            } else {
+                                server.broadcastMsg(ClientHandler.this,nick + ": " + str);
+                            }
                         }
-                        out.flush();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            out.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            socket.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
+                    server.unsubscribe(ClientHandler.this);
                 }
-                catch(IOException ex)
-                {
-                    ex.printStackTrace();
-                }
-                finally//освобождаем ресурсы
-                {
-                    try
-                    {
-                        in.close();
-                        //out.close();   //в отдельный блок try - catch
-                        //socket.close();//в отдельный блок try - catch
-                    }
-                    catch(IOException ex)
-                    {
-                        ex.printStackTrace();
-                    }
-                    try
-                    {
-                        out.close();
-                    }
-                    catch(IOException ex)
-                    {
-                        ex.printStackTrace();
-                    }
-                    try
-                    {
-                        socket.close();
-                    }
-                    catch(IOException ex)
-                    {
-                        ex.printStackTrace();
-                    }
-
-                    server.remove_client(this);//Клиент отключился и больше не активен
-
-                }//finally
-
             }).start();
 
-        }
-        catch(IOException ex)
-        {
-            ex.printStackTrace();
-        }
-    }//public ClientHandler
-
-    public String getClientName() {
-        return this.clientName;
-    }
-
-    //если нужно послать сообщение клиенту
-    public void sendMsg(String msg)
-    {
-        try
-        {
-            out.writeUTF(msg);//отослать сообщение клиенту
-        }
-        catch(IOException ex)
-        {
-            ex.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-}//class ClientHandler
+
+    static void sendMsg(String msg) {
+        try {
+            out.writeUTF(msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
