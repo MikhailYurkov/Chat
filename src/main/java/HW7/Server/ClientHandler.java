@@ -78,7 +78,7 @@ class ClientHandler {
                                     sendMsg("Вы добавили пользователя " + tokens[1] + " в черный список");
                                 }
                             } else {
-                                server.broadcastMsg(ClientHandler.this,nick + ": " + str);
+                                server.broadcastMsg(ClientHandler.this, nick + ": " + str);
                             }
                         }
                     } catch (IOException e) {

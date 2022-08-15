@@ -5,32 +5,29 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
-
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.network_chat_client.HelloController">>
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseDragged="#msgsend" onMouseEntered="#msgsend" onMouseExited="#msgsend" onMouseMoved="#msgsend" onMousePressed="#msgsend" onMouseReleased="#msgsend" onScroll="#msgsend" onScrollFinished="#msgsend" onScrollStarted="#msgsend" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.andreis.chat.HelloController">
    <children>
-      <Button layoutX="533.0" layoutY="339.0" mnemonicParsing="false" onAction="#send" prefHeight="57.0" prefWidth="64.0" text="Send" AnchorPane.bottomAnchor="4.0">
+      <Button layoutX="528.0" layoutY="342.0" mnemonicParsing="false" onAction="#send" prefHeight="57.0" prefWidth="71.0" text="Send" />
+      <TextField fx:id="toSend" layoutX="188.0" layoutY="342.0" onKeyPressed="#keysnd" prefHeight="57.0" prefWidth="339.0" promptText="Message" />
+      <Label alignment="CENTER" contentDisplay="CENTER" lineSpacing="50.0" prefHeight="57.0" prefWidth="600.0" style="-fx-background-color: yellow;" text="SuperChat" textFill="#eb0202">
          <font>
-            <Font name="Berlin Sans FB" size="15.0" />
-         </font>
-      </Button>
-      <TextField fx:id="toSend" layoutX="212.0" layoutY="337.0" prefHeight="57.0" prefWidth="320.0" promptText="Enter text" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="212.0" />
-      <Label layoutX="235.0" prefHeight="57.0" prefWidth="102.0" text="Chat" textAlignment="JUSTIFY">
-         <font>
-            <Font name="Berlin Sans FB" size="40.0" />
+            <Font size="36.0" />
          </font>
       </Label>
-      <ListView fx:id="allMessages" layoutX="210.0" layoutY="78.0" prefHeight="258.0" prefWidth="384.0" AnchorPane.rightAnchor="4.0" />
-      <Label layoutX="379.0" layoutY="57.0" text="Message">
+      <ListView fx:id="allMessages" layoutX="188.0" layoutY="120.0" prefHeight="223.0" prefWidth="411.0" />
+      <Label alignment="CENTER" layoutX="188.0" layoutY="63.0" prefHeight="51.0" prefWidth="411.0" text="Messages">
          <font>
-            <Font name="Berlin Sans FB" size="16.0" />
+            <Font size="24.0" />
          </font>
       </Label>
-      <ListView fx:id="allUsers" layoutX="4.0" layoutY="78.0" prefHeight="317.0" prefWidth="206.0" AnchorPane.leftAnchor="4.0" />
-      <Label layoutX="96.0" layoutY="57.0" text="Users">
+      <Line endX="400.0" endY="15.333328247070312" layoutX="200.0" layoutY="42.0" startX="-200.7070770263672" startY="15.333332061767578" />
+      <ListView fx:id="allUsers" layoutY="119.0" prefHeight="281.0" prefWidth="189.0" />
+      <Label alignment="CENTER" layoutY="60.0" prefHeight="57.0" prefWidth="189.0" text="In-chat-users">
          <font>
-            <Font name="Berlin Sans FB" size="16.0" />
+            <Font size="24.0" />
          </font>
       </Label>
    </children>
